@@ -58,4 +58,15 @@ export const funcionalidadService = {
     }
 };
 
+const NOMBRE_ESTADOS = 'estados';
+
+export const estadoService = {
+
+    // Traer todas los estados para dibujarlas en el inicio
+    async obtenerTodosEstados() {
+        const response = await api.get(`/${NOMBRE_ESTADOS}`);
+        return response.data;
+    },
+};
+
 export default api;

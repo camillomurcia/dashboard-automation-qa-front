@@ -2,20 +2,31 @@ import React, { useState, useEffect } from 'react';
 import Dashboard from './pages/Dashboard';
 import VistaOperaciones from './pages/VistaOperaciones';
 import { funcionalidadService } from './services/api';
+import { useToast } from './hooks/useToast.jsx';
 
 export default function App() {
     const [vistaActual, setVistaActual] = useState({ tipo: 'dashboard', funcId: null });
+    const { showSuccess, showError } = useToast();
     
     // ESTADO REAL DESDE JAVA
     const [funcionalidades, setFuncionalidades] = useState([]);
+    const [isLoadingFuncionalidades, setIsLoadingFuncionalidades] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Cargar desde Java al arrancar
     const cargarFuncionalidades = async () => {
         try {
+            setIsLoadingFuncionalidades(true);
             const data = await funcionalidadService.obtenerTodas();
             setFuncionalidades(data);
         } catch (error) {
             console.error("Error al cargar funcionalidades:", error);
+            showError(
+                'Error de conexión',
+                'No se pudieron cargar las funcionalidades. Verifica que el servidor esté funcionando.'
+            );
+        } finally {
+            setIsLoadingFuncionalidades(false);
         }
     };
 
@@ -26,11 +37,21 @@ export default function App() {
     // Función para guardar en Java
     const manejarCrearFuncionalidad = async (datos) => {
         try {
+            setIsSaving(true);
             await funcionalidadService.crear(datos);
-            cargarFuncionalidades(); // Recargar la lista tras guardar
+            await cargarFuncionalidades(); // Recargar la lista tras guardar
+            showSuccess(
+                '¡Funcionalidad creada!',
+                `"${datos.nombre}" se ha guardado correctamente.`
+            );
         } catch (error) {
             console.error("Error al crear:", error);
-            alert("No se pudo crear. Verifica que Spring Boot esté corriendo.");
+            showError(
+                'Error al crear funcionalidad',
+                'No se pudo crear la funcionalidad. Verifica que Spring Boot esté corriendo en el puerto 8080.'
+            );
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -50,6 +71,8 @@ export default function App() {
                     funcionalidades={funcionalidades} 
                     onSelect={(id) => setVistaActual({ tipo: 'operaciones', funcId: id })} 
                     onCrear={manejarCrearFuncionalidad}
+                    isLoading={isLoadingFuncionalidades}
+                    isSaving={isSaving}
                 />
             </div>
         );
