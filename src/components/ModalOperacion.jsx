@@ -31,13 +31,22 @@ export default function ModalOperacion({ isOpen, onClose, onSave, operacionAEdit
     const manejarEnvio = (e) => {
         e.preventDefault(); // Evita que la página se recargue
         // Empaquetamos los datos y se los mandamos al componente padre
-        onSave({
+
+        // 1. Forzamos la conversión a Número de forma estricta
+        const totalNum = total === '' ? 0 : Number(total);
+        const autoNum = auto === '' ? 0 : Number(auto);
+
+        // 2. Empaquetamos los datos
+        const payload = {
             id: operacionAEditar ? operacionAEditar.id : null,
-            nombre,
-            totalEscenarios: parseInt(total) || 0,
-            automatizados: operacionAEditar ? (parseInt(auto) || 0) : 0,
+            nombre: nombre,
+            totalEscenarios: totalNum,
+            // Si estamos creando forzamos 0, si estamos editando mandamos el número exacto (incluso si es 0)
+            automatizados: operacionAEditar ? autoNum : 0, 
             estadoManual: estadoManual === '' ? null : estadoManual
-        });
+        };
+        
+        onSave(payload);
     };
 
     const esCreacion = !operacionAEditar;
